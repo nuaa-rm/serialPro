@@ -40,6 +40,7 @@ public:
         setGetLength([](const head& h) {
             return h.length;
         });
+        setListenerMaxSize(256);
     }
 
     RobotComm(const RobotComm& other) = delete;

@@ -17,12 +17,64 @@ namespace ms {
     class Listener {
     private:
         CallbackManager callbackManager;
-        std::string txBuffer{100};
+        std::string rxBuffer{100};
         std::vector<std::function<bool(const Head&)>> headCheckers;
         std::vector<std::function<bool(const Tail&, const uint8_t*, int)>> tailCheckers;
         std::function<size_t(const Head&)> getLength;
         std::function<int(const Head&)> getId;
         int maxSize = 1024;
+
+        bool scan() {
+            int eraseSize = 0;
+            if ((int)rxBuffer.size() < sizeof(Head) + sizeof(Tail)) {
+                return false;
+            }
+            bool okHeadFound = false;
+            for (int i = 0; (long)i < (long)rxBuffer.size() - sizeof(Head) - sizeof(Tail); i++) {
+                uint8_t *p = (uint8_t*)rxBuffer.data() + i;
+                int size = (int)rxBuffer.size() - i;
+
+                Head head;
+                memcpy(&head, p, sizeof(Head));
+                bool headOk = true;
+                for (auto checker : headCheckers) {
+                    if (!checker(head)) {
+                        headOk = false;
+                        break;
+                    }
+                }
+                if (!headOk && !okHeadFound) {
+                    eraseSize = i+1;
+                    continue;
+                }
+
+                int length = getLength(head);
+                if (size < length + sizeof(Tail) + sizeof(Head)) {
+                    okHeadFound = true;
+                    continue;
+                }
+
+                Tail tail;
+                memcpy(&tail, p + sizeof(Head) + length, sizeof(Tail));
+                bool tailOk = true;
+                for (auto checker : tailCheckers) {
+                    if (!checker(tail, p, sizeof(Head) + length)) {
+                        tailOk = false;
+                        break;
+                    }
+                }
+                if (!tailOk && !okHeadFound) {
+                    eraseSize = i+1;
+                    continue;
+                }
+                int id = getId(head);
+                callbackManager[id](p + sizeof(Head));
+                rxBuffer.erase(0, i + size);
+                return true;
+            }
+            rxBuffer.erase(0, eraseSize);
+            return false;
+        }
 
     public:
         Listener() = default;
@@ -32,7 +84,7 @@ namespace ms {
 
         Listener(Listener&& other)  noexcept {
             callbackManager = other.callbackManager;
-            txBuffer.swap(other.txBuffer);
+            rxBuffer.swap(other.rxBuffer);
             headCheckers.swap(other.headCheckers);
             tailCheckers.swap(other.tailCheckers);
             getLength = other.getLength;
@@ -40,7 +92,7 @@ namespace ms {
 
         Listener& operator=(const Listener& other) {
             callbackManager = other.callbackManager;
-            txBuffer = other.txBuffer;
+            rxBuffer = other.rxBuffer;
             headCheckers = other.headCheckers;
             tailCheckers = other.tailCheckers;
             getLength = other.getLength;
@@ -81,59 +133,11 @@ namespace ms {
         }
 
         bool append(const char c) {
-            if (txBuffer.size() >= maxSize) {
+            if (rxBuffer.size() >= maxSize) {
                 return false;
             }
-            txBuffer.push_back(c);
-            int eraseSize = 0;
-            if ((int)txBuffer.size() < sizeof(Head)+sizeof(Tail)) {
-                return false;
-            }
-            bool okHeadFound = false;
-            for (int i = 0; (long)i < (long)txBuffer.size()-sizeof(Head)-sizeof(Tail); i++) {
-                uint8_t *p = (uint8_t*)txBuffer.data() + i;
-                int size = (int)txBuffer.size() - i;
-
-                Head head;
-                memcpy(&head, p, sizeof(Head));
-                bool headOk = true;
-                for (auto checker : headCheckers) {
-                    if (!checker(head)) {
-                        headOk = false;
-                        break;
-                    }
-                }
-                if (!headOk && !okHeadFound) {
-                    eraseSize = i+1;
-                    continue;
-                }
-
-                int length = getLength(head);
-                if (size < length + sizeof(Tail) + sizeof(Head)) {
-                    okHeadFound = true;
-                    continue;
-                }
-
-                Tail tail;
-                memcpy(&tail, p + sizeof(Head) + length, sizeof(Tail));
-                bool tailOk = true;
-                for (auto checker : tailCheckers) {
-                    if (!checker(tail, p, sizeof(Head) + length)) {
-                        tailOk = false;
-                        break;
-                    }
-                }
-                if (!tailOk && !okHeadFound) {
-                    eraseSize = i+1;
-                    continue;
-                }
-                int id = getId(head);
-                callbackManager[id](p + sizeof(Head));
-                txBuffer.erase(0, i+size);
-                return true;
-            }
-            txBuffer.erase(0, eraseSize);
-            return false;
+            rxBuffer.push_back(c);
+            return scan();
         }
     };
 }

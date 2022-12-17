@@ -12,10 +12,11 @@
 ## serialPro API
 通过`serialib`库实现串口通信，通过`msg_serializer`库实现消息序列化与反序列化，
 仍需要用户配置msg_serializer API中提到的所有配置项，配置项函数均已透传至`serialPro`类  
+可以通过参考`RobotComm`类实现自定义通信协议的类以便使用
 
 ## msg_serializer API
 `msg_serializer`自带了`message_data`宏，所有的消息内容都需要使用该宏进行定义，以关闭自动字节对齐，
-  该宏仅对gcc做相应处理，使用其他编译器时需要自行处理  
+该宏仅对gcc做相应处理，使用其他编译器时需要自行处理
 
 ### Listener
 `Listener`是`msg_serializer`中的消息解析器，支持自定义帧头和帧尾  

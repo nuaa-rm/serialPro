@@ -19,8 +19,8 @@ message_data tail {
 
 class RobotComm : protected sp::serialPro<head, tail> {
 public:
+    // 构造函数
     RobotComm() = default;
-
     RobotComm(const std::string& port, int baud) : sp::serialPro<head, tail>(port, baud) {
         registerSetter([](head& h, int s) {
             h.length = s;
@@ -47,11 +47,13 @@ public:
     RobotComm& operator=(const RobotComm& other) = delete;
     RobotComm(RobotComm&& other) noexcept : sp::serialPro<head, tail>(std::move(other)) {}
 
+    // 注册回调函数
     template<typename T>
     void registerCallback(int id, std::function<void(const T&)> callback) {
         sp::serialPro<head, tail>::registerCallback(id, callback);
     }
 
+    // 发送数据
     template<typename T>
     bool write(uint8_t id, const T& t) {
         return sp::serialPro<head, tail>::write(head{.id=id}, t);

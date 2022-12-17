@@ -39,6 +39,35 @@ serialib::serialib()
 #endif
 }
 
+serialib::serialib(serialib&& other) noexcept {
+#if defined (_WIN32) || defined( _WIN64)
+    hSerial = other.hSerial;
+    other.hSerial = INVALID_HANDLE_VALUE;
+#endif
+#if defined (__linux__) || defined(__APPLE__)
+    fd = other.fd;
+    other.fd = -1;
+#endif
+    currentStateRTS = other.currentStateRTS;
+    currentStateDTR = other.currentStateDTR;
+}
+
+serialib& serialib::operator=(serialib&& other) noexcept {
+    if (this != &other) {
+#if defined (_WIN32) || defined( _WIN64)
+        hSerial = other.hSerial;
+        other.hSerial = INVALID_HANDLE_VALUE;
+#endif
+#if defined (__linux__) || defined(__APPLE__)
+        fd = other.fd;
+        other.fd = -1;
+#endif
+        currentStateRTS = other.currentStateRTS;
+        currentStateDTR = other.currentStateDTR;
+    }
+    return *this;
+}
+
 
 /*!
     \brief      Destructor of the class serialib. It close the connection

@@ -100,6 +100,8 @@ public:
 
     // Constructor of the class
     serialib    ();
+    serialib    (serialib&& other) noexcept;
+    serialib& operator=(serialib&& other) noexcept;
 
     // Destructor
     ~serialib   ();

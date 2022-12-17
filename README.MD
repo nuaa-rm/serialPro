@@ -6,7 +6,7 @@
 
 ## RobotComm API
 此类为2023赛季机器人通信协议的C++实现，继承了`serialPro`类，所有配置项均已在构造函数中配置  
-只需要实例化本类即可通过`write`函数发送消息，并通过registerCallback方法注册回调函数，
+只需要实例化本类即可通过`write`函数发送消息，并通过`registerCallback`方法注册回调函数，
 如果解析器扫描到完整消息，会自动调用注册的回调函数
 
 ## serialPro API

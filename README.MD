@@ -33,4 +33,9 @@
 `Writer`是`msg_serializer`中的消息打包器，支持自定义帧头和帧尾  
 可以通过`serialize`方法将消息打包成字节流
 #### 可选配置
-* `registerSetter`注册打包器，主要用于自动处理校验和，有帧头打包器和帧尾打包器两种类型，分别对帧头和帧尾中的校验和进行处理
+* `registerSetter`注册打包器，主要用于自动处理校验和，有帧头打包器和帧尾打包器两种类型，
+  分别对帧头和帧尾中的校验和进行处理
+
+## License信息
+本库使用了第三方库[serialib](https://github.com/imabot2/serialib)实现跨平台串口通信，
+并对该包做了一定的修改，故继承该包的GPLv3开源协议开源

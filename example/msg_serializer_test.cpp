@@ -48,7 +48,7 @@ int main() {
         return t.tailer == 0xbb;
     });
 
-    auto s = writer.serialize(head{.id=0x10}, data{0x01, 0x0203}, tail{});
+    auto s = writer.serialize(head{.id=0x10}, data{0x01, 0x0203});
 
     for (auto c : s) {
         std::cout.fill('0');

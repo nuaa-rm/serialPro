@@ -41,7 +41,7 @@ namespace ms {
         }
 
         template<typename T>
-        std::string serialize(Head head, T t, Tail tail) {
+        std::string serialize(Head head, T t, Tail tail=Tail{}) {
             std::string s;
             s.resize(sizeof(Head) + sizeof(T) + sizeof(Tail));
 

@@ -28,6 +28,7 @@ public:
         registerSetter([](tail& t, const uint8_t* data, int s) {
             t.crc8 = ms::crc8check(data, s);
         });
+
         registerChecker([](const head& h) {
             return h.header == 0xaa;
         });
@@ -40,6 +41,7 @@ public:
         setGetLength([](const head& h) {
             return h.length;
         });
+
         setListenerMaxSize(256);
     }
 

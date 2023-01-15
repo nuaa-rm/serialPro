@@ -9,8 +9,6 @@
 #include <map>
 #include <functional>
 
-#include <boost/serialization/singleton.hpp>
-#include <utility>
 
 namespace ms {
     class CallbackManager{

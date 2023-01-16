@@ -93,7 +93,7 @@ namespace sp {
         }
 
         template<typename T>
-        void registerCallback(int id, std::function<void(const T&)> callback) {
+        void registerCallback(int id, T callback) {
             listener.registerCallback(id, callback);
         }
 

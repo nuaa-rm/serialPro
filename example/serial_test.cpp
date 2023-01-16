@@ -12,9 +12,16 @@ message_data dd {
     uint16_t b;
 };
 
+void callback(const dd& d) {
+    std::cout << "recv: \n";
+    std::cout << "a: " << std::hex << std::setw(2) << std::setfill('0') << (int)d.a << std::endl;
+    std::cout << "b: " << std::hex << std::setw(4) << std::setfill('0') << d.b << std::endl;
+}
+
 int main() {
     RobotComm serial("/dev/ttyUSB0", 115200);
-    serial.registerCallback<dd>(0x10, [](const dd& d) {
+    serial.registerCallback(0x10, &callback);
+    serial.registerCallback(0x09, [](const dd& d) {
         std::cout << "recv: \n";
         std::cout << "a: " << std::hex << std::setw(2) << std::setfill('0') << (int)d.a << std::endl;
         std::cout << "b: " << std::hex << std::setw(4) << std::setfill('0') << d.b << std::endl;

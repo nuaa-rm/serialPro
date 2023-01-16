@@ -50,10 +50,7 @@ public:
     RobotComm(RobotComm&& other) noexcept : sp::serialPro<head, tail>(std::move(other)) {}
 
     // 注册回调函数
-    template<typename T>
-    void registerCallback(int id, std::function<void(const T&)> callback) {
-        sp::serialPro<head, tail>::registerCallback(id, callback);
-    }
+    using sp::serialPro<head, tail>::registerCallback;
 
     // 发送数据
     template<typename T>

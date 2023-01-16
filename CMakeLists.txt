@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.3)
 project(serialPro)
 
 set(CMAKE_CXX_STANDARD 14)

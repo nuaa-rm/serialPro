@@ -24,6 +24,15 @@ namespace ms {
         std::function<int(const Head&)> getId;
         int maxSize = 1024;
 
+        template<class T>
+        struct lambda_type;
+
+        template<class C, class Ret, class... Args>
+        struct lambda_type<Ret(C::*)(Args...) const>
+        {
+            using type = std::function<void(Args...)>;
+        };
+
         bool scan() {
             int eraseSize = 0;
             if ((int)rxBuffer.size() < sizeof(Head) + sizeof(Tail)) {
@@ -68,12 +77,82 @@ namespace ms {
                     continue;
                 }
                 int id = getId(head);
-                callbackManager[id](p + sizeof(Head));
+                callbackManager[id](p);
                 rxBuffer.erase(0, i + size);
                 return true;
             }
             rxBuffer.erase(0, eraseSize);
             return false;
+        }
+
+        template<typename T>
+        bool _registerCallback(int id, std::function<void(const T&)> userCallback) {
+            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
+                T t;
+                memcpy(&t, data + sizeof(Head), sizeof(T));
+                userCallback(t);
+            });
+        }
+
+        template<typename T>
+        bool _registerCallback(int id, void(*userCallback)(const T&)) {
+            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
+                T t;
+                memcpy(&t, data + sizeof(Head), sizeof(T));
+                userCallback(t);
+            });
+        }
+
+        template<typename T>
+        bool registerCallback(int id, void(*userCallback)(const Head&, const T&)) {
+            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
+                T t;
+                Head head;
+                Tail tail;
+                memcpy(&t, data + sizeof(Head), sizeof(T));
+                memcpy(&t, data, sizeof(Head));
+                memcpy(&t, data + sizeof(Head) + sizeof(T), sizeof(Tail));
+                userCallback(head, t, tail);
+            });
+        }
+
+        template<typename T>
+        bool registerCallback(int id, std::function<void(const Head&, const T&)> userCallback) {
+            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
+                T t;
+                Head head;
+                Tail tail;
+                memcpy(&t, data + sizeof(Head), sizeof(T));
+                memcpy(&t, data, sizeof(Head));
+                memcpy(&t, data + sizeof(Head) + sizeof(T), sizeof(Tail));
+                userCallback(head, t, tail);
+            });
+        }
+
+        template<typename T>
+        bool registerCallback(int id, void(*userCallback)(const Head&, const T&, const Tail&)) {
+            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
+                T t;
+                Head head;
+                Tail tail;
+                memcpy(&t, data + sizeof(Head), sizeof(T));
+                memcpy(&t, data, sizeof(Head));
+                memcpy(&t, data + sizeof(Head) + sizeof(T), sizeof(Tail));
+                userCallback(head, t, tail);
+            });
+        }
+
+        template<typename T>
+        bool registerCallback(int id, std::function<void(const Head&, const T&, const Tail&)> userCallback) {
+            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
+                T t;
+                Head head;
+                Tail tail;
+                memcpy(&t, data + sizeof(Head), sizeof(T));
+                memcpy(&t, data, sizeof(Head));
+                memcpy(&t, data + sizeof(Head) + sizeof(T), sizeof(Tail));
+                userCallback(head, t, tail);
+            });
         }
 
     public:
@@ -119,15 +198,6 @@ namespace ms {
             getId = _getId;
         }
 
-        template<typename T>
-        bool registerCallback(int id, std::function<void(const T&)> userCallback) {
-            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
-                T t;
-                memcpy(&t, data, sizeof(T));
-                userCallback(t);
-            });
-        }
-
         bool append(const uint8_t c) {
             return append(*(char*)&c);
         }
@@ -138,6 +208,22 @@ namespace ms {
             }
             rxBuffer.push_back(c);
             return scan();
+        }
+
+        template<class T, typename fun_t = typename lambda_type<decltype(&T::operator())>::type>
+        void registerCallback(int id, T callback) {
+            _registerCallback(id, fun_t(std::forward<T>(callback)));
+        }
+
+        template<typename ... args>
+        void registerCallback(int id, std::function<void(args...)> callback) {
+            _registerCallback(id, callback);
+        }
+
+        template<typename T>
+        typename std::enable_if<std::is_pointer<T>::value, void>::type
+        registerCallback(int id, T callback) {
+            _registerCallback(id, callback);
         }
     };
 }

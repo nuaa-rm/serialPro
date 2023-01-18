@@ -26,7 +26,7 @@ namespace sp {
             while (running) {
                 char c;
                 serial.readChar(&c, 1);
-                listener.append(c);
+                listener.push(c);
             }
         }
 

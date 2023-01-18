@@ -56,10 +56,10 @@ int main() {
     }
     std::cout << std::endl;
 
-    listener.append((uint8_t)0);
-    listener.append((uint8_t)0xbb);
-    listener.append((uint8_t)0xaa);
+    listener.push((uint8_t) 0);
+    listener.push((uint8_t) 0xbb);
+    listener.push((uint8_t) 0xaa);
     for (auto c : s) {
-        listener.append(c);
+        listener.push(c);
     }
 }

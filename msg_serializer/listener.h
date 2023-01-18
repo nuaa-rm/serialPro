@@ -198,11 +198,11 @@ namespace ms {
             getId = _getId;
         }
 
-        bool append(const uint8_t c) {
-            return append(*(char*)&c);
+        bool push(const uint8_t c) {
+            return push(*(char *) &c);
         }
 
-        bool append(const char c) {
+        bool push(const char c) {
             if (rxBuffer.size() >= maxSize) {
                 return false;
             }

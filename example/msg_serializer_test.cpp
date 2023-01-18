@@ -37,7 +37,7 @@ int main() {
         [](const head& h) {return h.length;},
         [](const head& t) {return t.id;}
     );
-    listener.registerCallback<data>(0x10, cb);
+    listener.registerCallback(0x10, cb);
     listener.registerChecker([](const head& h) {
         return h.header == 0xaa;
     });

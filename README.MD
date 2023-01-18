@@ -4,7 +4,7 @@
 * msg_serializer用于消息序列化与反序列化，是一个纯头文件库，可以通过将`msg_serializer`文件夹拷贝到工程中使用
 * serialPro用于串口通信，需要将`thirdparty`、`include`、`msg_serializer`文件夹均拷贝到工程，并编写CMake
 
-## RobotComm API
+## RefereeSerial API
 此类为2023赛季机器人通信协议的C++实现，继承了`serialPro`类，所有配置项均已在构造函数中配置  
 只需要实例化本类即可通过`write`函数发送消息，并通过`registerCallback`方法注册回调函数，
 如果解析器扫描到完整消息，会自动调用注册的回调函数
@@ -12,7 +12,7 @@
 ## serialPro API
 通过`serialib`库实现串口通信，通过`msg_serializer`库实现消息序列化与反序列化，
 仍需要用户配置msg_serializer API中提到的所有配置项，配置项函数均已透传至`serialPro`类  
-可以通过参考`RobotComm`类实现自定义通信协议的类以便使用
+可以通过参考`RefereeSerial`类实现自定义通信协议的类以便使用
 
 ## msg_serializer API
 `msg_serializer`自带了`message_data`宏，所有的消息内容都需要使用该宏进行定义，以关闭自动字节对齐，

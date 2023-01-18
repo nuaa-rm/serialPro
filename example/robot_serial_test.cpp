@@ -19,7 +19,7 @@ void callback(const dd& d) {
 }
 
 int main() {
-    RobotComm serial("/dev/ttyUSB0", 115200);
+    robot::RobotSerial serial("/dev/ttyUSB0", 115200);
     serial.registerCallback(0x10, &callback);
     serial.registerCallback(0x09, [](const dd& d) {
         std::cout << "recv: \n";

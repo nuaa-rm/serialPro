@@ -18,10 +18,11 @@ namespace ms {
     private:
         CallbackManager callbackManager;
         std::string rxBuffer{100};
-        std::vector<std::function<bool(const Head&)>> headCheckers;
-        std::vector<std::function<bool(const Tail&, const uint8_t*, int)>> tailCheckers;
+        std::vector<std::function<int(const Head&)>> headCheckers;
+        std::vector<std::function<int(const Tail&, const uint8_t*, int)>> tailCheckers;
         std::function<size_t(const Head&)> getLength;
         std::function<int(const Head&)> getId;
+        std::function<void(int, const std::string&)> errorHandle;
         int maxSize = 1024;
 
         template<typename T>
@@ -58,14 +59,17 @@ namespace ms {
 
                 Head head;
                 memcpy(&head, p, sizeof(Head));
-                bool headOk = true;
+                int headCheckerResult;
                 for (auto checker : headCheckers) {
-                    if (!checker(head)) {
-                        headOk = false;
+                    headCheckerResult = checker(head);
+                    if (headCheckerResult) {
+                        if (errorHandle) {
+                            errorHandle(headCheckerResult, rxBuffer.substr(i));
+                        }
                         break;
                     }
                 }
-                if (!headOk && !okHeadFound) {
+                if (headCheckerResult && !okHeadFound) {
                     eraseSize = i+1;
                     continue;
                 }
@@ -73,19 +77,25 @@ namespace ms {
                 int length = getLength(head);
                 if (size < length + sizeof(Tail) + sizeof(Head)) {
                     okHeadFound = true;
+                    if (errorHandle) {
+                        errorHandle(1, rxBuffer.substr(i));
+                    }
                     continue;
                 }
 
                 Tail tail;
                 memcpy(&tail, p + sizeof(Head) + length, sizeof(Tail));
-                bool tailOk = true;
+                int tailCheckerResult;
                 for (auto checker : tailCheckers) {
-                    if (!checker(tail, p, sizeof(Head) + length)) {
-                        tailOk = false;
+                    tailCheckerResult = checker(tail, p, sizeof(Head) + length);
+                    if (tailCheckerResult) {
+                        if (errorHandle) {
+                            errorHandle(tailCheckerResult, rxBuffer.substr(i));
+                        }
                         break;
                     }
                 }
-                if (!tailOk && !okHeadFound) {
+                if (tailCheckerResult && !okHeadFound) {
                     eraseSize = i+1;
                     continue;
                 }
@@ -160,11 +170,11 @@ namespace ms {
             maxSize = _maxSize;
         }
 
-        void registerChecker(std::function<bool(const Head&)> checker) {
+        void registerChecker(std::function<int(const Head&)> checker) {
             headCheckers.push_back(checker);
         }
 
-        void registerChecker(std::function<bool(const Tail&, const uint8_t*, int)> checker) {
+        void registerChecker(std::function<int(const Tail&, const uint8_t*, int)> checker) {
             tailCheckers.push_back(checker);
         }
 
@@ -186,6 +196,10 @@ namespace ms {
             }
             rxBuffer.push_back(c);
             return scan();
+        }
+
+        void registerErrorHandle(std::function<void(int, const std::string&)>& func) {
+            errorHandle = func;
         }
 
         template<class T, class func_t = typename lambda_type<decltype(&T::operator())>::type>

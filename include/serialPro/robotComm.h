@@ -20,6 +20,13 @@ namespace robot {
 
     class RobotSerial : protected sp::serialPro<head, tail> {
     public:
+        enum error {
+            ok,
+            rxLessThanLength,
+            sofError,
+            crcError
+        };
+
         // 构造函数
         RobotSerial() = default;
         RobotSerial(const std::string& port, int baud) : sp::serialPro<head, tail>(port, baud) {
@@ -30,11 +37,19 @@ namespace robot {
                 t.crc8 = ms::crc8check(data, s);
             });
 
-            registerChecker([](const head& h) {
-                return h.header == 0xaa;
+            registerChecker([](const head& h) -> int {
+                if (h.header == 0xaa) {
+                    return ok;
+                } else {
+                    return sofError;
+                }
             });
-            registerChecker([](const tail& t, const uint8_t* data, int s) {
-                return t.crc8 == ms::crc8check(data, s);
+            registerChecker([](const tail& t, const uint8_t* data, int s) -> int {
+                if (t.crc8 == ms::crc8check(data, s)) {
+                    return ok;
+                } else {
+                    return crcError;
+                }
             });
             setGetId([](const head& h) {
                 return h.id;
@@ -52,6 +67,7 @@ namespace robot {
 
         // 注册回调函数
         using sp::serialPro<head, tail>::registerCallback;
+        using sp::serialPro<head, tail>::registerErrorHandle;
 
         // 发送数据
         template<typename T>

@@ -87,6 +87,10 @@ namespace sp {
             listener.setGetId(_getId);
         }
 
+        void registerErrorHandle(std::function<void(int, const std::string&)>& func) {
+            listener.registerErrorHandle(func);
+        }
+
         template<typename T>
         void registerSetter(T setter) {
             writer.registerSetter(setter);

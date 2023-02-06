@@ -36,6 +36,5 @@ int main() {
     begin1 = clock();
     serial.write(0x10, dd{0x01, 0x0203});
     begin2 = clock();
-
-    sleep(1);
+    serial.spinOnce();
 }

@@ -5,6 +5,8 @@
 #ifndef SERIALPRO_SERIALPRO_H
 #define SERIALPRO_SERIALPRO_H
 
+#define MAX_READ_ONCE_CHAR 40
+
 #include <atomic>
 #include <string>
 #include <thread>
@@ -24,9 +26,9 @@ namespace sp {
 
         void readLoop() {
             while (running) {
-                char c;
-                serial.readChar(&c, 1);
-                listener.push(c);
+                char buffer[MAX_READ_ONCE_CHAR];
+                int len = serial.readBytes(buffer, MAX_READ_ONCE_CHAR, 1);
+                listener.push(buffer, len);
             }
         }
 
@@ -36,7 +38,6 @@ namespace sp {
         serialPro(const std::string& port, int baud) {
             open(port, baud);
             running = true;
-            readThread = std::thread(&serialPro::readLoop, this);
         }
 
         serialPro(serialPro&& other) noexcept {
@@ -61,10 +62,6 @@ namespace sp {
 
         ~serialPro() {
             close();
-            running = false;
-            if (readThread.joinable()) {
-                readThread.join();
-            }
         }
 
         char open(const std::string& port, int baud) {
@@ -72,7 +69,33 @@ namespace sp {
         }
 
         void close() {
+            running = false;
+            if (readThread.joinable()) {
+                readThread.join();
+            }
             serial.closeDevice();
+        }
+
+        void spin(bool background) {
+            if (background) {
+                readThread = std::thread(&serialPro::readLoop, this);
+            } else {
+                readLoop();
+            }
+        }
+
+        void spinOnce() {
+            while (true) {
+                int len = serial.available();
+                if (len == 0) {
+                    break;
+                } else if (len > MAX_READ_ONCE_CHAR) {
+                    len = MAX_READ_ONCE_CHAR;
+                }
+                char* buffer = new char[len];
+                len = serial.readBytes(buffer, len, 1);
+                listener.push(buffer, len);
+            }
         }
 
         void setListenerMaxSize(int size) {

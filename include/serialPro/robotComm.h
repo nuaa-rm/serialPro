@@ -68,6 +68,8 @@ namespace robot {
         // 注册回调函数
         using sp::serialPro<head, tail>::registerCallback;
         using sp::serialPro<head, tail>::registerErrorHandle;
+        using sp::serialPro<head, tail>::spin;
+        using sp::serialPro<head, tail>::spinOnce;
 
         // 发送数据
         template<typename T>

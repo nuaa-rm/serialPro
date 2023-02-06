@@ -53,6 +53,7 @@ namespace ms {
                 return false;
             }
             bool okHeadFound = false;
+            bool frameFound = false;
             for (int i = 0; (long)i < (long)rxBuffer.size() - sizeof(Head) - sizeof(Tail); i++) {
                 uint8_t *p = (uint8_t*)rxBuffer.data() + i;
                 int size = (int)rxBuffer.size() - i;
@@ -101,11 +102,11 @@ namespace ms {
                 }
                 int id = getId(head);
                 callbackManager[id](p);
-                rxBuffer.erase(0, i + size);
-                return true;
+                eraseSize = i + size;
+                frameFound = true;
             }
             rxBuffer.erase(0, eraseSize);
-            return false;
+            return frameFound;
         }
 
         template<typename T>
@@ -195,6 +196,11 @@ namespace ms {
                 return false;
             }
             rxBuffer.push_back(c);
+            return scan();
+        }
+
+        bool push(const char* buffer, int len) {
+            rxBuffer.append(buffer, len);
             return scan();
         }
 

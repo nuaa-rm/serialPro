@@ -29,7 +29,7 @@ namespace ms {
             if (it != callbacks.end()) {
                 return it->second;
             } else {
-                std::cout << "Command " << id << "not Registered" << std::endl;
+                std::cout << "Command " << id << " not Registered" << std::endl;
                 return [](const uint8_t*){};
             }
         }

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 #include "msg_serialize.h"
 
 message_data head {
@@ -14,8 +15,7 @@ message_data tail {
 };
 
 message_data data {
-    uint8_t a;
-    uint16_t b;
+    long a, b, c, d, e, f, g, h;
 };
 
 void cb(const data& d) {
@@ -39,13 +39,25 @@ int main() {
     );
     listener.registerCallback(0x10, cb);
     listener.registerChecker([](const head& h) {
-        return h.header == 0xaa;
+        if (h.header == 0xaa) {
+            return 0;
+        } else {
+            return 1;
+        }
     });
     listener.registerChecker([](const tail& t, const uint8_t* data, int s) {
-        return t.crc8 == ms::crc8check(data, s);
+        if (t.crc8 == ms::crc8check(data, s)) {
+            return 0;
+        } else {
+            return 1;
+        }
     });
     listener.registerChecker([](const tail& t, const uint8_t* _d, int _s) {
-        return t.tailer == 0xbb;
+        if (t.tailer == 0xbb) {
+            return 0;
+        } else {
+            return 1;
+        }
     });
 
     auto s = writer.serialize(head{.id=0x10}, data{0x01, 0x0203});
@@ -59,7 +71,14 @@ int main() {
     listener.push((uint8_t) 0);
     listener.push((uint8_t) 0xbb);
     listener.push((uint8_t) 0xaa);
-    for (auto c : s) {
-        listener.push(c);
+    for (int i = 0; i < ceil((double)s.size() / 40.); i++) {
+        char* pos = (char*)s.data() + i * 40;
+        int len;
+        if (i == floor((double)s.size() / 40.)) {
+            len = (int)s.size() - 40 * i;
+        } else {
+            len = 40;
+        }
+        listener.push(pos, len);
     }
 }

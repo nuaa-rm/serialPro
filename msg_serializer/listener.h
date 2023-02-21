@@ -17,7 +17,7 @@ namespace ms {
     class Listener {
     private:
         CallbackManager callbackManager;
-        std::string rxBuffer{100};
+        std::string rxBuffer;
         std::vector<std::function<int(const Head&)>> headCheckers;
         std::vector<std::function<int(const Tail&, const uint8_t*, int)>> tailCheckers;
         std::function<size_t(const Head&)> getLength;
@@ -70,8 +70,10 @@ namespace ms {
                         break;
                     }
                 }
-                if (headCheckerResult && !okHeadFound) {
-                    eraseSize = i+1;
+                if (headCheckerResult) {
+                    if (!okHeadFound) {
+                        eraseSize = i+1;
+                    }
                     continue;
                 }
 
@@ -96,8 +98,10 @@ namespace ms {
                         break;
                     }
                 }
-                if (tailCheckerResult && !okHeadFound) {
-                    eraseSize = i+1;
+                if (tailCheckerResult) {
+                    if (!okHeadFound) {
+                        eraseSize = i+1;
+                    }
                     continue;
                 }
                 int id = getId(head);

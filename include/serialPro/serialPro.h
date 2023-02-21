@@ -92,7 +92,7 @@ namespace sp {
                 } else if (len > MAX_READ_ONCE_CHAR) {
                     len = MAX_READ_ONCE_CHAR;
                 }
-                char* buffer = new char[len];
+                char buffer[MAX_READ_ONCE_CHAR];
                 len = serial.readBytes(buffer, len, 1);
                 listener.push(buffer, len);
             }
@@ -132,7 +132,7 @@ namespace sp {
         template<typename T>
         bool write(Head head, T t, Tail tail=Tail{}) {
             std::string s = writer.serialize(head, t, tail);
-            return serial.writeString(s.c_str());
+            return serial.writeBytes(s.c_str(), s.size());
         }
     };
 }

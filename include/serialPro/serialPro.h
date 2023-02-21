@@ -15,6 +15,19 @@
 #include "serialib.h"
 
 namespace sp {
+    class SerialException : public std::exception {
+    public:
+        explicit SerialException(const char *what)
+                : m_what(what) {}
+
+        const char *what() const noexcept override {
+            return m_what;
+        }
+
+    private:
+        const char *m_what;
+    };
+
     template<typename Head, typename Tail>
     class serialPro {
     private:
@@ -28,26 +41,36 @@ namespace sp {
             while (running) {
                 char buffer[MAX_READ_ONCE_CHAR];
                 int len = serial.readBytes(buffer, MAX_READ_ONCE_CHAR, 1);
-                listener.push(buffer, len);
+                if (len > 0) {
+                    listener.push(buffer, len);
+                } else if (len < 0) {
+                    throw SerialException("Serial Port Read ERROR!");
+                }
+            }
+        }
+
+        void open(const std::string &port, int baud) {
+            if (serial.openDevice(port.c_str(), baud) < 0) {
+                throw SerialException("Cannot Open Serial Port!");
             }
         }
 
     public:
         serialPro() = default;
 
-        serialPro(const std::string& port, int baud) {
+        serialPro(const std::string &port, int baud) {
             open(port, baud);
             running = true;
         }
 
-        serialPro(serialPro&& other) noexcept {
+        serialPro(serialPro &&other) noexcept {
             listener = std::move(other.listener);
             writer = std::move(other.writer);
             serial = std::move(other.serial);
             readThread = std::move(other.readThread);
         }
 
-        serialPro& operator=(serialPro&& other) noexcept {
+        serialPro &operator=(serialPro &&other) noexcept {
             if (this != &other) {
                 listener = std::move(other.listener);
                 writer = std::move(other.writer);
@@ -57,15 +80,12 @@ namespace sp {
             return *this;
         }
 
-        serialPro(serialPro& _) = delete;
-        serialPro& operator=(serialPro& _) = delete;
+        serialPro(serialPro &_) = delete;
+
+        serialPro &operator=(serialPro &_) = delete;
 
         ~serialPro() {
             close();
-        }
-
-        char open(const std::string& port, int baud) {
-            return serial.openDevice(port.c_str(), baud);
         }
 
         void close() {
@@ -94,7 +114,11 @@ namespace sp {
                 }
                 char buffer[MAX_READ_ONCE_CHAR];
                 len = serial.readBytes(buffer, len, 1);
-                listener.push(buffer, len);
+                if (len > 0) {
+                    listener.push(buffer, len);
+                } else if (len < 0) {
+                    throw SerialException("Serial Port Read ERROR!");
+                }
             }
         }
 
@@ -102,15 +126,15 @@ namespace sp {
             listener.setMaxSize(size);
         }
 
-        void setGetLength(std::function<size_t(const Head&)> _getLength) {
+        void setGetLength(std::function<size_t(const Head &)> _getLength) {
             listener.setGetLength(_getLength);
         }
 
-        void setGetId(std::function<int(const Head&)> _getId) {
+        void setGetId(std::function<int(const Head &)> _getId) {
             listener.setGetId(_getId);
         }
 
-        void registerErrorHandle(std::function<void(int, const std::string&)>& func) {
+        void registerErrorHandle(std::function<void(int, const std::string &)> &func) {
             listener.registerErrorHandle(func);
         }
 
@@ -130,9 +154,9 @@ namespace sp {
         }
 
         template<typename T>
-        bool write(Head head, T t, Tail tail=Tail{}) {
+        bool write(Head head, T t, Tail tail = Tail{}) {
             std::string s = writer.serialize(head, t, tail);
-            return serial.writeBytes(s.c_str(), s.size());
+            return serial.writeBytes(s.c_str(), s.size()) == 1;
         }
     };
 }

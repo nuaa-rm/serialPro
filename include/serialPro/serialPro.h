@@ -88,14 +88,6 @@ namespace sp {
             close();
         }
 
-        void close() {
-            running = false;
-            if (readThread.joinable()) {
-                readThread.join();
-            }
-            serial.closeDevice();
-        }
-
         void spin(bool background) {
             if (background) {
                 readThread = std::thread(&serialPro::readLoop, this);
@@ -122,6 +114,26 @@ namespace sp {
             }
         }
 
+        void close() {
+            running = false;
+            if (readThread.joinable()) {
+                readThread.join();
+            }
+            serial.closeDevice();
+        }
+
+        template<typename T>
+        bool write(Head head, T t, Tail tail = Tail{}) {
+            std::string s = writer.serialize(head, t, tail);
+            return serial.writeBytes(s.c_str(), s.size()) == 1;
+        }
+
+        template<typename T>
+        void registerCallback(int id, T callback) {
+            listener.registerCallback(id, callback);
+        }
+
+    protected:
         void setListenerMaxSize(int size) {
             listener.setMaxSize(size);
         }
@@ -144,19 +156,8 @@ namespace sp {
         }
 
         template<typename T>
-        void registerCallback(int id, T callback) {
-            listener.registerCallback(id, callback);
-        }
-
-        template<typename T>
         void registerChecker(T checker) {
             listener.registerChecker(checker);
-        }
-
-        template<typename T>
-        bool write(Head head, T t, Tail tail = Tail{}) {
-            std::string s = writer.serialize(head, t, tail);
-            return serial.writeBytes(s.c_str(), s.size()) == 1;
         }
     };
 }

@@ -18,7 +18,7 @@ namespace robot {
         uint8_t crc8 = 0;
     };
 
-    class RobotSerial : protected sp::serialPro<head, tail> {
+    class RobotSerial : public sp::serialPro<head, tail> {
     public:
         enum error {
             ok,
@@ -62,14 +62,9 @@ namespace robot {
         }
 
         RobotSerial(const RobotSerial& other) = delete;
-        RobotSerial& operator=(const RobotSerial& other) = delete;
         RobotSerial(RobotSerial&& other) noexcept : sp::serialPro<head, tail>(std::move(other)) {}
 
-        // 注册回调函数
-        using sp::serialPro<head, tail>::registerCallback;
-        using sp::serialPro<head, tail>::registerErrorHandle;
-        using sp::serialPro<head, tail>::spin;
-        using sp::serialPro<head, tail>::spinOnce;
+        using sp::serialPro<head, tail>::operator=;
 
         // 发送数据
         template<typename T>

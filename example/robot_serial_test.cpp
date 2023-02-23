@@ -9,6 +9,7 @@
 #include "serialPro/robotComm.h"
 
 clock_t begin1, begin2;
+robot::RobotSerial serial;
 
 message_data dd {
     uint8_t a;
@@ -25,7 +26,7 @@ void callback(const dd &d) {
 }
 
 int main() {
-    robot::RobotSerial serial("/dev/ttyUSB0", 115200);
+    serial = std::move(robot::RobotSerial("/dev/ttyUSB0", 115200));
     serial.registerCallback(0x10, &callback);
     serial.registerCallback(0x09, [](const dd &d) {
         std::cout << "recv: \n";

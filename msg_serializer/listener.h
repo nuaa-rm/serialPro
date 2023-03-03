@@ -160,6 +160,7 @@ namespace ms {
             headCheckers.swap(other.headCheckers);
             tailCheckers.swap(other.tailCheckers);
             getLength = other.getLength;
+            getId = other.getId;
         }
 
         Listener& operator=(const Listener& other) {
@@ -168,6 +169,7 @@ namespace ms {
             headCheckers = other.headCheckers;
             tailCheckers = other.tailCheckers;
             getLength = other.getLength;
+            getId = other.getId;
             return *this;
         }
 

@@ -68,6 +68,7 @@ namespace sp {
             writer = std::move(other.writer);
             serial = std::move(other.serial);
             readThread = std::move(other.readThread);
+            running.exchange(other.running);
         }
 
         serialPro &operator=(serialPro &&other) noexcept {
@@ -76,6 +77,7 @@ namespace sp {
                 writer = std::move(other.writer);
                 serial = std::move(other.serial);
                 readThread = std::move(other.readThread);
+                running.exchange(other.running);
             }
             return *this;
         }
@@ -90,6 +92,7 @@ namespace sp {
 
         void spin(bool background) {
             if (background) {
+                running = true;
                 readThread = std::thread(&serialPro::readLoop, this);
             } else {
                 readLoop();

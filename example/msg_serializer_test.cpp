@@ -18,6 +18,10 @@ message_data data {
     long a, b, c, d, e, f, g, h;
 };
 
+message_data data2 {
+    long a, c, d, e, f, g, h;
+};
+
 void cb(const data& d) {
     std::cout << "recv: \n";
     std::cout << "a: " << std::hex << std::setw(2) << std::setfill('0') << (int)d.a << std::endl;
@@ -59,6 +63,10 @@ int main() {
             return 1;
         }
     });
+    listener.registerErrorHandle([](int id, const std::string& _) {
+        if (id == 1) return ;
+        std::cout << std::dec << id << std::endl;
+    });
 
     auto s = writer.serialize(head{.id=0x10}, data{0x01, 0x0203});
 
@@ -81,4 +89,7 @@ int main() {
         }
         listener.push(pos, len);
     }
+
+    s = writer.serialize(head{.id=0x10}, data2{0x01, 0x0203});
+    listener.push(s);
 }

@@ -225,7 +225,12 @@ namespace ms {
             return scan();
         }
 
-        void registerErrorHandle(std::function<void(int, const std::string&)>& func) {
+        bool push(const std::string& str) {
+            rxBuffer.append(str);
+            return scan();
+        }
+
+        void registerErrorHandle(std::function<void(int, const std::string&)> func) {
             errorHandle = func;
         }
 

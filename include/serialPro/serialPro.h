@@ -136,7 +136,7 @@ namespace sp {
             listener.registerCallback(id, callback);
         }
 
-        void registerErrorHandle(std::function<void(int, const std::string &)> &func) {
+        void registerErrorHandle(std::function<void(int, const std::string &)> func) {
             listener.registerErrorHandle(func);
         }
 

@@ -21,10 +21,11 @@ namespace robot {
     class RobotSerial : public sp::serialPro<head, tail> {
     public:
         enum error {
-            ok,
-            rxLessThanLength,
-            sofError,
-            crcError
+            lengthNotMatch = -2,        // 从下位机接受的消息长度与注册回调时传入的消息长度不匹配
+            rxLessThanLength = -1,      // 当前缓冲区中的消息不完整，下次解析时重试
+            ok = 0,
+            sofError,                   // 帧头不匹配
+            crcError                    // crc8校验结果错误
         };
 
         // 构造函数

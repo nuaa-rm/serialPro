@@ -81,7 +81,7 @@ namespace ms {
                 if (size < length + sizeof(Tail) + sizeof(Head)) {
                     okHeadFound = true;
                     if (errorHandle) {
-                        errorHandle(1, rxBuffer.substr(i));
+                        errorHandle(-1, rxBuffer.substr(i));
                     }
                     continue;
                 }
@@ -105,7 +105,10 @@ namespace ms {
                     continue;
                 }
                 int id = getId(head);
-                callbackManager[id](p);
+                int cRes = callbackManager[id](p);
+                if (cRes && errorHandle) {
+                    errorHandle(cRes-1, rxBuffer.substr(i));
+                }
                 eraseSize = i + size;
                 frameFound = true;
             }
@@ -115,36 +118,48 @@ namespace ms {
 
         template<typename T>
         bool _registerCallback(int id, std::function<void(const T&)> userCallback) {
-            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
+            return callbackManager.registerCallback(id, [userCallback, this](const uint8_t* data) {
+                Head head;
+                memcpy(&head, data, sizeof(Head));
+                if (this->getLength(head) != sizeof(T)) {
+                    return -1;
+                }
                 T t;
                 memcpy(&t, data + sizeof(Head), sizeof(T));
                 userCallback(t);
+                return 0;
             });
         }
 
         template<typename T>
         bool _registerCallback(int id, std::function<void(const T&, const Head&)> userCallback) {
-            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
-                T t;
+            return callbackManager.registerCallback(id, [userCallback, this](const uint8_t* data) {
                 Head head;
-                Tail tail;
+                memcpy(&head, data, sizeof(Head));
+                if (this->getLength(head) != sizeof(T)) {
+                    return -1;
+                }
+                T t;
                 memcpy(&t, data + sizeof(Head), sizeof(T));
-                memcpy(&t, data, sizeof(Head));
-                memcpy(&t, data + sizeof(Head) + sizeof(T), sizeof(Tail));
-                userCallback(head, t, tail);
+                userCallback(t, head);
+                return 0;
             });
         }
 
         template<typename T>
         bool _registerCallback(int id, std::function<void(const T&, const Head&, const Tail&)> userCallback) {
-            return callbackManager.registerCallback(id, [userCallback](const uint8_t* data) {
-                T t;
+            return callbackManager.registerCallback(id, [userCallback, this](const uint8_t* data) {
                 Head head;
+                memcpy(&head, data, sizeof(Head));
+                if (this->getLength(head) != sizeof(T)) {
+                    return -1;
+                }
+                T t;
                 Tail tail;
                 memcpy(&t, data + sizeof(Head), sizeof(T));
-                memcpy(&head, data, sizeof(Head));
                 memcpy(&tail, data + sizeof(Head) + sizeof(T), sizeof(Tail));
-                userCallback(head, t, tail);
+                userCallback(t, head, tail);
+                return 0;
             });
         }
 

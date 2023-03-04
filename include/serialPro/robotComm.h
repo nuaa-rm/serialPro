@@ -31,7 +31,7 @@ namespace robot {
         RobotSerial() = default;
         RobotSerial(const std::string& port, int baud) : sp::serialPro<head, tail>(port, baud) {
             registerSetter([](head& h, int s) {
-                h.length = s;
+                h.length = s + sizeof(head) + sizeof(tail);
             });
             registerSetter([](tail& t, const uint8_t* data, int s) {
                 t.crc8 = ms::crc8check(data, s);
@@ -55,7 +55,7 @@ namespace robot {
                 return h.id;
             });
             setGetLength([](const head& h) {
-                return h.length;
+                return h.length - sizeof(head) - sizeof(tail);
             });
 
             setListenerMaxSize(256);

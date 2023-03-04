@@ -142,8 +142,8 @@ namespace ms {
                 Head head;
                 Tail tail;
                 memcpy(&t, data + sizeof(Head), sizeof(T));
-                memcpy(&t, data, sizeof(Head));
-                memcpy(&t, data + sizeof(Head) + sizeof(T), sizeof(Tail));
+                memcpy(&head, data, sizeof(Head));
+                memcpy(&tail, data + sizeof(Head) + sizeof(T), sizeof(Tail));
                 userCallback(head, t, tail);
             });
         }

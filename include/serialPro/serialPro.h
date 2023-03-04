@@ -136,6 +136,10 @@ namespace sp {
             listener.registerCallback(id, callback);
         }
 
+        void registerErrorHandle(std::function<void(int, const std::string &)> &func) {
+            listener.registerErrorHandle(func);
+        }
+
     protected:
         void setListenerMaxSize(int size) {
             listener.setMaxSize(size);
@@ -147,10 +151,6 @@ namespace sp {
 
         void setGetId(std::function<int(const Head &)> _getId) {
             listener.setGetId(_getId);
-        }
-
-        void registerErrorHandle(std::function<void(int, const std::string &)> &func) {
-            listener.registerErrorHandle(func);
         }
 
         template<typename T>

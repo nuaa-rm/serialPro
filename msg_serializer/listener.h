@@ -131,6 +131,16 @@ namespace ms {
             });
         }
 
+        bool _registerCallback(int id, std::function<void(const std::string&)> userCallback) {
+            return callbackManager.registerCallback(id, [userCallback, this](const uint8_t* data) {
+                Head head;
+                memcpy(&head, data, sizeof(Head));
+                std::string t((const char*)data + sizeof(Head), this->getLength(head));
+                userCallback(t);
+                return 0;
+            });
+        }
+
         template<typename T>
         bool _registerCallback(int id, std::function<void(const T&, const Head&)> userCallback) {
             return callbackManager.registerCallback(id, [userCallback, this](const uint8_t* data) {
@@ -141,6 +151,16 @@ namespace ms {
                 }
                 T t;
                 memcpy(&t, data + sizeof(Head), sizeof(T));
+                userCallback(t, head);
+                return 0;
+            });
+        }
+
+        bool _registerCallback(int id, std::function<void(const std::string&, const Head&)> userCallback) {
+            return callbackManager.registerCallback(id, [userCallback, this](const uint8_t* data) {
+                Head head;
+                memcpy(&head, data, sizeof(Head));
+                std::string t((const char*)data + sizeof(Head), this->getLength(head));
                 userCallback(t, head);
                 return 0;
             });
@@ -163,13 +183,25 @@ namespace ms {
             });
         }
 
+        bool _registerCallback(int id, std::function<void(const std::string&, const Head&, const Tail&)> userCallback) {
+            return callbackManager.registerCallback(id, [userCallback, this](const uint8_t* data) {
+                Head head;
+                Tail tail;
+                memcpy(&head, data, sizeof(Head));
+                std::string t((const char*)data + sizeof(Head), this->getLength(head));
+                memcpy(&tail, data + sizeof(Head) + t.length(), sizeof(Tail));
+                userCallback(t, head, tail);
+                return 0;
+            });
+        }
+
     public:
         Listener() = default;
 
         explicit Listener(std::function<size_t(const Head&)> _getLength, std::function<int(const Head&)> _getId) :
                 getLength(_getLength), getId(_getId) {}
 
-        Listener(Listener&& other)  noexcept {
+        Listener(Listener&& other) noexcept {
             callbackManager = other.callbackManager;
             rxBuffer.swap(other.rxBuffer);
             headCheckers.swap(other.headCheckers);

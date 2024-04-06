@@ -60,6 +60,24 @@ namespace ms {
             return std::move(s);
         }
 
+        std::string serialize(Head head, std::string& t, Tail tail=Tail{}) {
+            std::string s;
+            s.resize(sizeof(Head) + t.length() + sizeof(Tail));
+
+            for (auto& setter : headSetters) {
+                setter(head, t.length());
+            }
+            memcpy((void*)s.data(), &head, sizeof(Head));
+
+            memcpy((void*)(s.data()+sizeof(Head)), t.c_str(), t.length());
+
+            for (auto& setter : tailSetters) {
+                setter(tail, (uint8_t*)s.data(), sizeof(Head)+t.length());
+            }
+            memcpy((void*)(s.data()+sizeof(Head)+t.length()), &tail, sizeof(Tail));
+
+            return std::move(s);
+        }
     };
 }
 

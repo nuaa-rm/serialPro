@@ -99,6 +99,15 @@ namespace referee {
 
     class RefereeSerial : protected sp::serialPro<head, tail> {
     public:
+        enum error {
+            lengthNotMatch = -2,        // 从下位机接受的消息长度与注册回调时传入的消息长度不匹配
+            rxLessThanLength = -1,      // 当前缓冲区中的消息不完整，下次解析时重试
+            ok = 0,
+            sofError,                   // 帧头不匹配
+            crc8Error                   // crc8校验结果错误
+            crc16Error                  // crc16校验结果错误
+        };
+        
         // 构造函数
         RefereeSerial() = default;
         RefereeSerial(const std::string& port, int baud) : sp::serialPro<head, tail>(port, baud) {
@@ -106,20 +115,32 @@ namespace referee {
                 h.length = s;
             });
             registerSetter([](head& h, int _) {
-                h.crc8 = ms::crc8check((uint8_t*)&h, sizeof(head)-2);
+                h.crc8 = ms::crc8check((uint8_t*)&h, sizeof(head)-3);
             });
             registerSetter([](tail& t, const uint8_t* data, int s) {
                 t.crc16 = ms::crc16check(data, s);
             });
 
             registerChecker([](const head& h) {
-                return h.SOF == 0xA5;
+                if (h.SOF == 0xA5) {
+                    return ok;
+                } else {
+                    return sofError;
+                }
             });
             registerChecker([](const head& h) {
-                return h.crc8 == ms::crc8check((uint8_t*)&h, sizeof(head)-2);
+                if (h.crc8 == ms::crc8check((uint8_t*)&h, sizeof(head)-3)) {
+                    return ok;
+                } else {
+                    return crc8Error;
+                }
             });
             registerChecker([](const tail& t, const uint8_t* data, int s) {
-                return t.crc16 == ms::crc16check(data, s);
+                if (t.crc16 == ms::crc16check(data, s)) {
+                    return ok;
+                } else {
+                    return crc16Error;
+                }
             });
 
             setGetId([](const head& h) {

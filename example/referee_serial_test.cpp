@@ -7,5 +7,5 @@
 #include <serialPro/refereeSerial.h>
 
 int main() {
-    std::cout << sizeof(referee::ext_game_status_t);
+    std::cout << sizeof(referee::game_status_t);
 }

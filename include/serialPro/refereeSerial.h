@@ -104,7 +104,7 @@ namespace referee {
             rxLessThanLength = -1,      // 当前缓冲区中的消息不完整，下次解析时重试
             ok = 0,
             sofError,                   // 帧头不匹配
-            crc8Error                   // crc8校验结果错误
+            crc8Error,                   // crc8校验结果错误
             crc16Error                  // crc16校验结果错误
         };
         
